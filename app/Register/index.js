@@ -1,5 +1,3 @@
-import { Button } from '@rneui/base';
-import { Link, router } from 'expo-router';
 import React from 'react';
 import { Text, Image, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 
@@ -8,44 +6,26 @@ export default function Page() {
     <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Image source={require('@/assets/images/maplogo.png')} style={styles.bgImage} />
-          <Text style={styles.title}>Login</Text>
+          <Text style={styles.title}>Sign UP</Text>
           <View style={styles.inputContainer}>
-            <Text style={styles.labels}>ENTER YOUR NAME</Text>
+            <Text style={styles.labels}>ENTER YOUR EMAIL</Text>
             <TextInput style={styles.inputStyle} autoCapitalize="none" autoCorrect={false} />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.labels}>ENTER YOUR USERNAME</Text>
+            <TextInput style={styles.inputStyle} autoCapitalize="none" autoCorrect={false} secureTextEntry={true} />
           </View>
           <View style={styles.inputContainer}>
             <Text style={styles.labels}>ENTER YOUR PASSWORD</Text>
             <TextInput style={styles.inputStyle} autoCapitalize="none" autoCorrect={false} secureTextEntry={true} />
           </View>
-          <Button
-              title="Login"
-              buttonStyle={{
-                backgroundColor: 'rgba(78, 116, 289, 1)',
-                borderRadius: 3,
-              }}
-              containerStyle={{
-                width: 200,
-                marginHorizontal: 50,
-                marginVertical: 10,
-              }}
-            />
-          <Text style={styles.orText}>OR</Text>
-          <Button
-              title="SignUp"
-              onPress={()=>{
-                router.push(`/Register`)
-              }}
-              buttonStyle={{
-                backgroundColor: 'rgba(214, 61, 57, 1)',
-                borderRadius: 3,
-              }}
-              containerStyle={{
-                width: 200,
-                marginHorizontal: 50,
-                marginVertical: 10,
-              }}
-            />
+          <View style={styles.inputContainer}>
+            <Text style={styles.labels}>CONFIRM PASSWORD</Text>
+            <TextInput style={styles.inputStyle} autoCapitalize="none" autoCorrect={false} secureTextEntry={true} />
+          </View>
+          <TouchableOpacity style={styles.buttonStyle}>
+            <Text style={{ color: 'white' }}>REGISTER</Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
