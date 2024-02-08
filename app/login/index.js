@@ -1,7 +1,7 @@
 import { Button } from '@rneui/base';
 import { Link, router } from 'expo-router';
 import React from 'react';
-import { Text, Image, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Text, Image, View, StyleSheet, TextInput, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 
 export default function Page() {
   return (
