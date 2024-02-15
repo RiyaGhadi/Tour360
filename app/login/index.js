@@ -1,51 +1,168 @@
+import React, { useState, useEffect } from 'react';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { Button } from '@rneui/base';
 import { Link, router } from 'expo-router';
-import React from 'react';
-import { Text, Image, View, StyleSheet, TextInput, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Page() {
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [token, setToken] = useState('');
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        if (storedToken) {
+          setToken(storedToken);
+        }
+      } catch (error) {
+        console.error('Error retrieving token:', error);
+      }
+    };
+
+    getToken();
+  }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('email', name);
+      formData.append('password', password);
+
+      const response = await fetch('https://tour360-ruddy.vercel.app/api/login', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+
+      // Save token in AsyncStorage
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem("user", data.data)
+
+      // Update token state
+      setToken(data.token);
+      setUser(data.data)
+
+      // Clear error state
+      setError('');
+    } catch (error) {
+      console.error('Error logging in:', error);
+      setError(error.message);
+    }
+  };
+  const handleLogout = async () => {
+    try {
+      // Remove token and user data from AsyncStorage
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+
+      // Clear token and user state
+      setToken('');
+      setUser({});
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        {/* {
+        user!={} || token ?
+          <View style={{
+            marginTop: 500
+          }}>
+            <Text>{user?.username}</Text>
+            <Text>{token}</Text>
+            <Text>{user?.email}</Text>
+            <Button
+              title="Logout"
+              onPress={handleLogout}
+              buttonStyle={styles.logoutButton}
+            />
+          </View> : <></>
+      } */}
           <Image source={require('@/assets/images/maplogo.png')} style={styles.bgImage} />
           <Text style={styles.title}>Login</Text>
           <View style={styles.inputContainer}>
-            <Text style={styles.labels}>ENTER YOUR NAME</Text>
-            <TextInput style={styles.inputStyle} autoCapitalize="none" autoCorrect={false} />
+            <Text style={styles.labels}>ENTER YOUR EMAIL</Text>
+            <TextInput
+              style={styles.inputStyle}
+              autoCapitalize="none"
+              autoCorrect={true}
+              value={name}
+              onChangeText={setName}
+            />
           </View>
           <View style={styles.inputContainer}>
             <Text style={styles.labels}>ENTER YOUR PASSWORD</Text>
-            <TextInput style={styles.inputStyle} autoCapitalize="none" autoCorrect={false} secureTextEntry={true} />
+            <TextInput
+              style={styles.inputStyle}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={true}
+              value={password}
+              onChangeText={setPassword}
+            />
           </View>
           <Button
-              title="Login"
-              buttonStyle={{
-                backgroundColor: 'rgba(78, 116, 289, 1)',
-                borderRadius: 3,
-              }}
-              containerStyle={{
-                width: 200,
-                marginHorizontal: 50,
-                marginVertical: 10,
-              }}
-            />
+            title="Login"
+            onPress={handleSubmit}
+            buttonStyle={{
+              backgroundColor: 'rgba(78, 116, 289, 1)',
+              borderRadius: 3,
+            }}
+            containerStyle={{
+              width: 200,
+              marginHorizontal: 50,
+              marginVertical: 10,
+            }}
+          />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {token ? <Text style={styles.tokenText}>Token: {token}</Text> : null}
           <Text style={styles.orText}>OR</Text>
           <Button
-              title="SignUp"
-              onPress={()=>{
-                router.push(`/Register`)
-              }}
-              buttonStyle={{
-                backgroundColor: 'rgba(214, 61, 57, 1)',
-                borderRadius: 3,
-              }}
-              containerStyle={{
-                width: 200,
-                marginHorizontal: 50,
-                marginVertical: 10,
-              }}
-            />
+            title="SignUp"
+            onPress={() => {
+              router.navigate(`/Register`)
+            }}
+            buttonStyle={{
+              backgroundColor: 'rgba(214, 61, 57, 1)',
+              borderRadius: 3,
+            }}
+            containerStyle={{
+              width: 200,
+              marginHorizontal: 50,
+              marginVertical: 10,
+            }}
+          />
+        </View>
+        <View>
+        <Button
+            title="Create"
+            onPress={() => {
+              router.navigate(`/Grid`)
+            }}
+            buttonStyle={{
+              backgroundColor: 'blue',
+              borderRadius: 3,
+              position:'relative'
+            }}
+            containerStyle={{
+              width: 100,
+              marginHorizontal: 150,
+              marginVertical: 10,
+            }}
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -76,23 +193,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
-  buttonStyle: {
-    backgroundColor: 'blue',
-    padding: 10,
-    borderRadius: 5,
-    width: '80%',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
   orText: {
     fontSize: 20,
     marginBottom: 10,
   },
-  signupButton: {
-    backgroundColor: 'red',
-    padding: 10,
-    borderRadius: 5,
-    width: '40%',
-    alignItems: 'center',
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  tokenText: {
+    marginTop: 10,
   },
 });

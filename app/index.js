@@ -1,37 +1,46 @@
+import React, { useState, useEffect } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, Card, Button, Icon } from '@rneui/themed';
-
 import { Link, Stack, router } from 'expo-router';
-const colleges = [
-  {
-    id: "1",
-    name: "RIT",
-    image: "https://ritgoa.ac.in/wp-content/uploads/2019/05/LRM.jpg"
-  },
-  {
-    id: "2",
-    name: "GEC",
-    image: "https://qph.cf2.quoracdn.net/main-qimg-4a277c835bc243bc04a03633d1040e5d.webp"
-  },
-  {
-    id: "3",
-    name: "PCCE",
-    image: "https://images.shiksha.com/mediadata/images/1491281944phpLzN266_g.jpg"
-  },
 
-];
 export default function Page() {
+  const [colleges, setColleges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track user login status
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('https://tour360-ruddy.vercel.app/api/campus');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setColleges(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
 
   return (
-    <View>
+    <View style={styles.container}>
       <Stack.Screen
         options={{
           headerTitle: "Tour 360",
           headerStyle: "",
           headerRight: () => (
             <Button
-              title={<Icon
-                name='person' />}
+              title={<Icon name='person' />}
               onPress={() => {
                 router.push(`/login`)
               }}
@@ -43,37 +52,58 @@ export default function Page() {
                 width: "auto",
                 padding: 5,
               }}
-
             />
           ),
         }}
       />
       <Text>Home page</Text>
 
-      <ScrollView>
-        <View>
-          {colleges.map((person) => {
-            return (
-              <Card key={person.id}>
-
-                <Card.Title>{person.name}</Card.Title>
+      {loading ? (
+        <Text>Loading...</Text>
+      ) : error ? (
+        <Text>Error: {error}</Text>
+      ) : (
+        <ScrollView>
+          <View>
+            {colleges.map((college) => (
+              <Card key={college.id}>
+                <Card.Title>{college.name}</Card.Title>
                 <Card.Divider />
                 <Card.Image
                   style={{ padding: 0 }}
-                  source={{
-                    uri:
-                      person.image,
-                  }}
+                  source={{ uri: college.image }}
                 />
                 <Text style={{ marginBottom: 10 }}>
-                  <Link href={`/${person.id}`}>Visit {person.name}</Link>
+                  <Link href={`/${college.id}`}>Visit {college.name}</Link>
                 </Text>
-
               </Card>
-            );
-          })}
-        </View>
-      </ScrollView>
+            ))}
+          </View>
+        </ScrollView>
+      )}
+
+      {/* Footer Button */}
+
+      <Button
+        title="Create"
+        onPress={() => {
+          router.push(`/Create`)
+        }}
+        buttonStyle={{
+          backgroundColor: 'blue',
+          borderRadius: 100,
+          marginHorizontal: 20,
+          marginBottom: 20,
+        }}
+        containerStyle={{
+          width: "auto",
+          padding: 5,
+        }}
+        titleStyle={{
+          fontSize: 18,
+        }}
+      />
+
     </View>
   );
 }
@@ -100,9 +130,3 @@ const styles = StyleSheet.create({
   },
 });
 
-function LogoTitle() {
-  return (
-    <>
-    </>
-  );
-}
