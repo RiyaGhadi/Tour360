@@ -30,7 +30,7 @@ export default function PathDrawingGrid() {
       const newGrid = [...grid];
       newGrid[row][col] = !newGrid[row][col];
       setGrid(newGrid);
-    }
+    } 
   };
 
   const createMap = () => {
