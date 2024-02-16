@@ -49,9 +49,22 @@ export default function Page() {
               secureTextEntry={true}
             />
           </View>
-          <TouchableOpacity style={styles.buttonStyle}>
-            <Text style={{ color: 'white' }}>Create</Text>
-          </TouchableOpacity>
+          <Button
+            title="next"
+            onPress={() => {
+              router.navigate(`/profile`)
+            }}
+            buttonStyle={{
+              backgroundColor: 'blue',
+              borderRadius: 3,
+              position:'relative'
+            }}
+            containerStyle={{
+              width: 100,
+              marginHorizontal: 150,
+              marginVertical: 10,
+            }}
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

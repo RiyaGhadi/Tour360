@@ -146,24 +146,6 @@ export default function Page() {
             }}
           />
         </View>
-        <View>
-        <Button
-            title="Create"
-            onPress={() => {
-              router.navigate(`/Grid`)
-            }}
-            buttonStyle={{
-              backgroundColor: 'blue',
-              borderRadius: 3,
-              position:'relative'
-            }}
-            containerStyle={{
-              width: 100,
-              marginHorizontal: 150,
-              marginVertical: 10,
-            }}
-          />
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
