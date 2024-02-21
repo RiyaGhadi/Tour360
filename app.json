@@ -3,6 +3,7 @@
     "name": "Tour360",
     "slug": "Tour360",
     "version": "1.0.0",
+    "expo.optimizeJs": false,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",

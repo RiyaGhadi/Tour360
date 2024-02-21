@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { router } from 'expo-router'; // Import useRouter hook from expo-router
 
 const ProfilePage = () => {
+  const router = useRouter(); // Initialize router object
   const [instituteName, setInstituteName] = useState('');
   const [numberOfFloors, setNumberOfFloors] = useState('');
 
   const handleSubmit = () => {
-    // Handle submission of user input, such as sending to a backend server or storing in local storage
     console.log("Institute Name:", instituteName);
     console.log("Number of Floors:", numberOfFloors);
-    // You can perform further actions here, such as navigation or data validation
+
+    // Here you would send data to backend API to save
+    // After saving, navigate to the grid page for the first floor
+    router.navigate('/Grid', { currentFloor: 1, totalFloors: parseInt(numberOfFloors) });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Profile Page</Text>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Building Name:</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter institute name"
+          placeholder="Enter Building name"
           value={instituteName}
           onChangeText={text => setInstituteName(text)}
         />
@@ -31,7 +34,7 @@ const ProfilePage = () => {
           placeholder="Enter number of floors"
           value={numberOfFloors}
           onChangeText={text => setNumberOfFloors(text)}
-          keyboardType="numeric" // Set keyboardType to allow only numeric input
+          keyboardType="numeric"
         />
       </View>
       <Button title="Submit" onPress={handleSubmit} />
@@ -44,30 +47,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    padding: 20,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   label: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginRight: 10,
+    marginBottom: 10,
   },
   input: {
-    flex: 1,
-    height: 40,
     borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 5,
-    paddingHorizontal: 10,
+    padding: 10,
+    fontSize: 16,
+    width: '100%',
   },
 });
-
-export default ProfilePage;

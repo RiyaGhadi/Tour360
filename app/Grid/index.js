@@ -1,36 +1,55 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Dimensions, Alert, Image, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { FontAwesome6, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function PathDrawingGrid() {
   const initialGridSize = 30; // Initial grid size
-  const initialCellSize = screenWidth / initialGridSize;
-
   const [gridSize, setGridSize] = useState(initialGridSize);
-  const [cellSize, setCellSize] = useState(initialCellSize);
-  const [grid, setGrid] = useState(Array.from({ length: initialGridSize }, () => Array.from({ length: initialGridSize }, () => false)));
-  const [selectedCell, setSelectedCell] = useState(null);
-  const [icons, setIcons] = useState([]);
+  const [cellSize, setCellSize] = useState(screenWidth / initialGridSize);
+  const [grid, setGrid] = useState(Array.from({ length: initialGridSize }, () => Array.from({ length: initialGridSize }, () => null))); // Change to array of images
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedCell, setSelectedCell] = useState({ row: null, col: null });
 
-  const handleDoubleTapIcon = (iconName) => {
-    setIcons([...icons, iconName]);
+  useEffect(() => {
+    // Update cellSize when the window dimensions change
+    const updateCellSize = () => {
+      setCellSize(screenWidth / gridSize);
+    };
+
+    Dimensions.addEventListener('change', updateCellSize);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      //  Dimensions.removeEventListener('change', updateCellSize);
+    };
+  }, [gridSize]);
+
+  const handleDoubleTapImage = (imageUri) => {
+    setSelectedImage(imageUri);
   };
 
   const handleSingleTapGrid = (row, col) => {
-    if (icons.length > 0) {
-      const newIcons = [...icons];
-      const icon = newIcons.pop();
-      setGridIcon(row, col, icon);
-      setIcons(newIcons);
-    } else {
-      // Toggle the state of the cell between black and blue
+    // Check if an image is already placed in the selected cell
+    if (grid[row][col] !== null) {
+      // If an image is present, remove it and deactivate the path
       const newGrid = [...grid];
-      newGrid[row][col] = !newGrid[row][col];
+      newGrid[row][col] = null;
+      setSelectedImage(null);
+      setSelectedCell({ row: null, col: null });
       setGrid(newGrid);
-    } 
+    } else if (selectedImage) {
+      // If an image is selected, place it on the grid
+      setSelectedCell({ row, col });
+      setGridImage(row, col, selectedImage);
+      setSelectedImage(null); // Deactivate the image after placing it
+    } else {
+      // If no image is present and no image is selected, draw a path on single tap
+      const newGrid = [...grid];
+      newGrid[row][col] = 'path';
+      setGrid(newGrid);
+    }
   };
 
   const createMap = () => {
@@ -38,11 +57,23 @@ export default function PathDrawingGrid() {
     Alert.alert('Map Created!', 'Map has been created successfully.');
   };
 
-  const setGridIcon = (row, col, iconName) => {
+  const setGridImage = (row, col, imageUri) => {
     const newGrid = [...grid];
-    for (let i = row; i < row + 3; i++) {
-      for (let j = col; j < col + 3; j++) {
-        newGrid[i][j] = iconName;
+    if (
+      imageUri === require('./../../assets/images/up.png') ||
+      imageUri === require('./../../assets/images/down.png') ||
+      imageUri === require('./../../assets/images/washroom.png')
+    ) {
+      // For one-cell images, set the image URI to the selected cell only
+      newGrid[row][col] = imageUri;
+    } else {
+      // For two-cell images, set the image URI to the 9-cell area centered around the selected cell
+      for (let i = row - 1; i <= row + 1; i++) {
+        for (let j = col - 1; j <= col + 1; j++) {
+          if (i >= 0 && i < gridSize && j >= 0 && j < gridSize) {
+            newGrid[i][j] = imageUri;
+          }
+        }
       }
     }
     setGrid(newGrid);
@@ -50,21 +81,6 @@ export default function PathDrawingGrid() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      {/* Render icons below the grid */}
-      <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={() => handleDoubleTapIcon('restroom')}>
-          <FontAwesome6 name="restroom" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDoubleTapIcon('building-o')}>
-          <FontAwesome name="building-o" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDoubleTapIcon('stairs')}>
-          <FontAwesome6 name="stairs" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDoubleTapIcon('meeting-room')}>
-          <MaterialIcons name="meeting-room" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
       {/* Render the grid */}
       <View style={{ flex: 1, backgroundColor: 'white' }}>
         {grid.map((row, rowIndex) => (
@@ -74,18 +90,41 @@ export default function PathDrawingGrid() {
                 key={colIndex}
                 style={[
                   styles.cell,
-                  { 
+                  {
                     width: cellSize,
                     height: cellSize,
-                    backgroundColor: cell ? 'black' : 'white', // Set background color based on cell state
+                    backgroundColor: grid[rowIndex][colIndex] === 'path' ? 'blue' : 'white',
                   },
-                  selectedCell && selectedCell.row === rowIndex && selectedCell.col === colIndex ? styles.cellSelected : null
+                  selectedCell.row === rowIndex && selectedCell.col === colIndex ? styles.cellSelected : null
                 ]}
                 onPress={() => handleSingleTapGrid(rowIndex, colIndex)}
-              />
+              >
+                {/* Render images within the grid cell */}
+                {cell && <Image source={cell} style={{ width: '100%', height: '100%' }} />}
+              </TouchableOpacity>
             ))}
           </View>
         ))}
+      </View>
+      {/* Render images below the grid */}
+      <View style={styles.imagesContainer}>
+        <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/up.png'))}>
+          <Image source={require('./../../assets/images/up.png')} style={{ width: cellSize, height: cellSize }} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/down.png'))}>
+          <Image source={require('./../../assets/images/down.png')} style={{ width: cellSize, height: cellSize }} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/Classroom .png'))}>
+          <Image source={require('./../../assets/images/Classroom .png')} style={{ width: cellSize * 2, height: cellSize * 2 }} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/building.png'))}>
+          <Image source={require('./../../assets/images/building.png')} style={{ width: cellSize * 2, height: cellSize * 2 }} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/washroom.png'))}>
+          <Image source={require('./../../assets/images/washroom.png')} style={{ width: cellSize, height: cellSize }} />
+        </TouchableOpacity>
+
+        {/* Add more image buttons here */}
       </View>
     </GestureHandlerRootView>
   );
@@ -108,12 +147,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cellSelected: {
-    backgroundColor: 'blue',
+    backgroundColor: 'black', // Selected cell color
   },
-  iconsContainer: {
+  imagesContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    paddingBottom: 25,
-    marginTop: 20,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingBottom: 10,
   },
 });

@@ -52,7 +52,7 @@ export default function Page() {
           <Button
             title="next"
             onPress={() => {
-              router.navigate(`/profile`)
+              router.navigate(`/Grid`)
             }}
             buttonStyle={{
               backgroundColor: 'blue',
