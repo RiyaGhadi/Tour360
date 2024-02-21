@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Keyb
 import { Button } from '@rneui/base';
 import { Link, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native'; // Import the navigation hook
 
 export default function Page() {
   const [name, setName] = useState('');
@@ -10,6 +11,7 @@ export default function Page() {
   const [error, setError] = useState('');
   const [token, setToken] = useState('');
   const [user, setUser] = useState({});
+  const navigation = useNavigation(); // Initialize navigation object
 
   useEffect(() => {
     const getToken = async () => {
@@ -43,13 +45,16 @@ export default function Page() {
 
       const data = await response.json();
 
-      // Save token in AsyncStorage
+      // Save token and user data in AsyncStorage
       await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem("user", data.data)
+      await AsyncStorage.setItem('user', JSON.stringify(data.data));
 
-      // Update token state
+      // Update token and user state
       setToken(data.token);
-      setUser(data.data)
+      setUser(data.data);
+
+      // Navigate to Profile page
+      navigation.navigate('UserProfile');
 
       // Clear error state
       setError('');
@@ -58,6 +63,7 @@ export default function Page() {
       setError(error.message);
     }
   };
+
   const handleLogout = async () => {
     try {
       // Remove token and user data from AsyncStorage
@@ -71,26 +77,11 @@ export default function Page() {
       console.error('Error logging out:', error);
     }
   };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        {/* {
-        user!={} || token ?
-          <View style={{
-            marginTop: 500
-          }}>
-            <Text>{user?.username}</Text>
-            <Text>{token}</Text>
-            <Text>{user?.email}</Text>
-            <Button
-              title="Logout"
-              onPress={handleLogout}
-              buttonStyle={styles.logoutButton}
-            />
-          </View> : <></>
-      } */}
           <Image source={require('@/assets/images/maplogo.png')} style={styles.bgImage} />
           <Text style={styles.title}>Login</Text>
           <View style={styles.inputContainer}>
@@ -128,7 +119,6 @@ export default function Page() {
             }}
           />
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          {token ? <Text style={styles.tokenText}>Token: {token}</Text> : null}
           <Text style={styles.orText}>OR</Text>
           <Button
             title="SignUp"
@@ -184,6 +174,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tokenText: {
+    marginTop: 10,
+  },
+  logoutButton: {
+    backgroundColor: 'red',
     marginTop: 10,
   },
 });
