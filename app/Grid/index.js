@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Dimensions, Alert, Image, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Dimensions, Alert, Image, StyleSheet, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const screenWidth = Dimensions.get('window').width;
 
-export default function PathDrawingGrid() {
+export default function PathDrawingGrid({ floorNumber, floorName }) {
   const initialGridSize = 30; // Initial grid size
   const [gridSize, setGridSize] = useState(initialGridSize);
   const [cellSize, setCellSize] = useState(screenWidth / initialGridSize);
@@ -55,6 +55,7 @@ export default function PathDrawingGrid() {
   const createMap = () => {
     // Implement your logic to create the map here
     Alert.alert('Map Created!', 'Map has been created successfully.');
+    sendDataToBackend(); // Send data to backend when map is created
   };
 
   const setGridImage = (row, col, imageUri) => {
@@ -79,8 +80,39 @@ export default function PathDrawingGrid() {
     setGrid(newGrid);
   };
 
+  const sendDataToBackend = async () => {
+    try {
+      // Send data to backend API
+      const response = await fetch('YOUR_BACKEND_API_URL', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          floorNumber: floorNumber,
+          floorName: floorName,
+          grid: grid,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send data to backend.');
+      }
+
+      console.log('Data sent to backend successfully.');
+    } catch (error) {
+      console.error('Error sending data to backend:', error);
+    }
+  };
+
   return (
     <GestureHandlerRootView style={styles.container}>
+      {/* Display floor information */}
+      <View style={styles.floorInfoContainer}>
+        <Text style={styles.floorInfoText}>Floor {floorNumber}</Text>
+        <Text style={styles.floorInfoText}>{floorName}</Text>
+      </View>
+
       {/* Render the grid */}
       <View style={{ flex: 1, backgroundColor: 'white' }}>
         {grid.map((row, rowIndex) => (
@@ -106,6 +138,7 @@ export default function PathDrawingGrid() {
           </View>
         ))}
       </View>
+
       {/* Render images below the grid */}
       <View style={styles.imagesContainer}>
         <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/up.png'))}>
@@ -123,7 +156,6 @@ export default function PathDrawingGrid() {
         <TouchableOpacity onPress={() => handleDoubleTapImage(require('./../../assets/images/washroom.png'))}>
           <Image source={require('./../../assets/images/washroom.png')} style={{ width: cellSize, height: cellSize }} />
         </TouchableOpacity>
-
         {/* Add more image buttons here */}
       </View>
     </GestureHandlerRootView>
@@ -154,5 +186,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingBottom: 10,
+  },
+  floorInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
+  floorInfoText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginRight: 10,
   },
 });
