@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
-import * as FaceDetector from 'expo-face-detector';
 
 export default function Page() {
   const [email, setEmail] = useState('');
@@ -12,6 +11,8 @@ export default function Page() {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
   const [faceDetected, setFaceDetected] = useState(false);
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
 
   const cameraRef = useRef(null);
 
@@ -28,10 +29,28 @@ export default function Page() {
         const photo = await cameraRef.current.takePictureAsync();
         setImageUri(photo.uri);
         setShowCamera(false);
+        // Send the captured image to the backend
+        sendImageToBackend(photo.uri);
       } catch (error) {
         console.error('Error taking picture: ', error);
       }
     }
+  };
+
+  const sendImageToBackend = async (uri) => {
+    // Implement sending the image to the backend here
+    // For example:
+    // const formData = new FormData();
+    // formData.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' });
+    // const response = await fetch('YOUR_BACKEND_ENDPOINT', {
+    //   method: 'POST',
+    //   body: formData,
+    //   headers: {
+    //     'Content-Type': 'multipart/form-data',
+    //   },
+    // });
+    // const data = await response.json();
+    // console.log('Image uploaded:', data);
   };
 
   const handleCameraSwitch = () => {
@@ -51,7 +70,28 @@ export default function Page() {
   };
 
   const handleSubmit = async () => {
-    // Your submission logic goes here
+    // Check if password and confirm password match
+    if (password !== confirmPassword) {
+      Alert.alert('Password and confirm password do not match');
+      return;
+    }
+
+    // Send user data (name, surname, email, password) to the backend
+    sendUserDataToBackend({ name, surname, email, password });
+  };
+
+  const sendUserDataToBackend = async (userData) => {
+    // Implement sending user data to the backend here
+    // For example:
+    // const response = await fetch('YOUR_BACKEND_ENDPOINT', {
+    //   method: 'POST',
+    //   body: JSON.stringify(userData),
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    // });
+    // const data = await response.json();
+    // console.log('User data sent:', data);
   };
 
   return (
@@ -86,6 +126,26 @@ export default function Page() {
             )}
             {imageUri && (
               <View style={{ width: '80%' }}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.labels}>NAME</Text>
+                  <TextInput
+                    style={styles.inputStyle}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={name}
+                    onChangeText={setName}
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.labels}>SURNAME</Text>
+                  <TextInput
+                    style={styles.inputStyle}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={surname}
+                    onChangeText={setSurname}
+                  />
+                </View>
                 <View style={styles.inputContainer}>
                   <Text style={styles.labels}>ENTER YOUR EMAIL</Text>
                   <TextInput
