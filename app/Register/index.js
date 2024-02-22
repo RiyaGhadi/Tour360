@@ -40,17 +40,17 @@ export default function Page() {
   const sendImageToBackend = async (uri) => {
     // Implement sending the image to the backend here
     // For example:
-    // const formData = new FormData();
-    // formData.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' });
-    // const response = await fetch('YOUR_BACKEND_ENDPOINT', {
-    //   method: 'POST',
-    //   body: formData,
-    //   headers: {
-    //     'Content-Type': 'multipart/form-data',
-    //   },
-    // });
-    // const data = await response.json();
-    // console.log('Image uploaded:', data);
+     const formData = new FormData();
+    formData.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' });
+    const response = await fetch('https://yinihqkmqtemokvacipf.supabase.co', {
+     method: 'POST',
+      body: formData,
+    headers: {
+       'Content-Type': 'multipart/form-data',
+    },
+    });
+     const data = await response.json();
+    onsole.log('Image uploaded:', data);
   };
 
   const handleCameraSwitch = () => {
@@ -83,15 +83,15 @@ export default function Page() {
   const sendUserDataToBackend = async (userData) => {
     // Implement sending user data to the backend here
     // For example:
-    // const response = await fetch('YOUR_BACKEND_ENDPOINT', {
-    //   method: 'POST',
-    //   body: JSON.stringify(userData),
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
-    // const data = await response.json();
-    // console.log('User data sent:', data);
+    const response = await fetch('https://yinihqkmqtemokvacipf.supabase.co', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    console.log('User data sent:', data);
   };
 
   return (

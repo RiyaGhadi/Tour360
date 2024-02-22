@@ -72,7 +72,17 @@ export default function Page() {
               />
             </View>
             <View style={styles.inputContainer}>
-              <Text style={styles.labels}>CONFIRM PASSWORD</Text>
+              <Text style={styles.labels}> PASSWORD</Text>
+              <TextInput
+                style={styles.inputStyle}
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry={true}
+                onChangeText={text => setConfirmPassword(text)}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.labels}> CONFIRM PASSWORD</Text>
               <TextInput
                 style={styles.inputStyle}
                 autoCapitalize="none"
@@ -96,6 +106,36 @@ export default function Page() {
               }}
             />
           </View>
+          <Button
+            title="Location"
+            onPress={() => {
+              router.navigate(`/Location`)
+            }}
+            buttonStyle={{
+              backgroundColor: 'blue',
+              borderRadius: 3,
+            }}
+            containerStyle={{
+              width: 200,
+              marginHorizontal: 50,
+              marginVertical: 10,
+            }}
+          />
+          <Button
+            title="Grid"
+            onPress={() => {
+              router.navigate(`/Grid`)
+            }}
+            buttonStyle={{
+              backgroundColor: 'blue',
+              borderRadius: 3,
+            }}
+            containerStyle={{
+              width: 200,
+              marginHorizontal: 50,
+              marginVertical: 10,
+            }}
+          />
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ScrollView>
