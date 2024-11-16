@@ -1,192 +1,160 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image, Alert } from 'react-native';
-import { Camera } from 'expo-camera';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Alert,ImageBackground } from 'react-native';
+import { createClient } from '@supabase/supabase-js';
+import { useNavigation } from '@react-navigation/native';
+import * as Crypto from 'expo-crypto';
+
+
+const supabase = createClient('https://yinihqkmqtemokvacipf.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpbmlocWttcXRlbW9rdmFjaXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgwNjM4NTEsImV4cCI6MjAyMzYzOTg1MX0.SPb-xP8uhX94OTaAepQEX6o0c3gj-okkbEIdXT9Xxpw');
 
 export default function Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [hasPermission, setHasPermission] = useState(null);
-  const [imageUri, setImageUri] = useState(null);
-  const [showCamera, setShowCamera] = useState(false);
-  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
-  const [faceDetected, setFaceDetected] = useState(false);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
-
-  const cameraRef = useRef(null);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
-
-  const handleTakePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        const photo = await cameraRef.current.takePictureAsync();
-        setImageUri(photo.uri);
-        setShowCamera(false);
-        // Send the captured image to the backend
-        sendImageToBackend(photo.uri);
-      } catch (error) {
-        console.error('Error taking picture: ', error);
-      }
-    }
+  const [emailErrorMessage, setEmailErrorMessage] = useState('');
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
+  const navigation = useNavigation();
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const sendImageToBackend = async (uri) => {
-    // Implement sending the image to the backend here
-    // For example:
-     const formData = new FormData();
-    formData.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' });
-    const response = await fetch('https://yinihqkmqtemokvacipf.supabase.co', {
-     method: 'POST',
-      body: formData,
-    headers: {
-       'Content-Type': 'multipart/form-data',
-    },
-    });
-     const data = await response.json();
-    onsole.log('Image uploaded:', data);
-  };
-
-  const handleCameraSwitch = () => {
-    setCameraType(
-      cameraType === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
-    );
-  };
-
-  const handleFaceDetection = ({ faces }) => {
-    if (faces.length > 0) {
-      setFaceDetected(true);
-    } else {
-      setFaceDetected(false);
-    }
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    return passwordRegex.test(password);
   };
 
   const handleSubmit = async () => {
-    // Check if password and confirm password match
+    if (!validateEmail(email)) {
+      setEmailErrorMessage('Please enter a valid email address.');
+      return;
+    } else {
+      setEmailErrorMessage('');
+    }
+
+    if (!validatePassword(password)) {
+      setPasswordErrorMessage('Password must be at least 8 characters long and contain both numbers and alphabets.');
+      return;
+    } else {
+      setPasswordErrorMessage('');
+    }
+
     if (password !== confirmPassword) {
       Alert.alert('Password and confirm password do not match');
       return;
     }
 
-    // Send user data (name, surname, email, password) to the backend
-    sendUserDataToBackend({ name, surname, email, password });
-  };
+    try {
+      // Hash the password using Expo's Crypto module (SHA-256)
+      const hashedPassword = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        password
+      );
 
-  const sendUserDataToBackend = async (userData) => {
-    // Implement sending user data to the backend here
-    // For example:
-    const response = await fetch('https://yinihqkmqtemokvacipf.supabase.co', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
-    console.log('User data sent:', data);
-  };
+      const userData = {
+        'email': email,
+        'password': hashedPassword,
+        'name': name,
+        'surname': surname,
+      };
 
+      const { data: userDataResponse, error: userInsertError } = await supabase
+        .from('User')
+        .insert([userData]);
+
+      if (userInsertError) {
+        throw new Error('Error inserting user data: ' + userInsertError.message);
+      }
+
+      console.log('User data inserted successfully:', userDataResponse);
+      navigation.navigate('login'); // Navigate to login screen after successful registration
+
+    } catch (error) {
+      console.error('Error saving user data:', error.message);
+    }
+  };
   return (
-    <ScrollView>
-      <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <ImageBackground
+    source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSp1R_3LRWcgJVv_zo-z-NJdXq7XXsqZdz28Q&usqp=CAU' }}
+    style={styles.backgroundImage}
+   // Adding blur effect
+  > 
+    <ScrollView >
+      <SafeAreaView style={{ flex: 1 ,marginTop:150}}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : null}>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            {!showCamera ? (
-              <>
-                <Text style={styles.title}>Sign UP</Text>
-                <TouchableOpacity style={styles.cameraButton} onPress={() => setShowCamera(true)}>
-                  <Text style={{ color: 'white' }}>Open Camera</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Camera
-                  style={styles.camera}
-                  type={cameraType}
-                  ref={cameraRef}
-                  onFacesDetected={handleFaceDetection}
+            <Text style={styles.title}>Sign UP</Text>
+            <View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.labels}>NAME</Text>
+                <TextInput
+                  style={styles.inputStyle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={name}
+                  onChangeText={setName}
                 />
-                {faceDetected && (
-                  <TouchableOpacity style={styles.buttonStyle} onPress={handleTakePicture}>
-                    <Text style={{ color: 'white' }}>Take Picture</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity style={styles.buttonStyle} onPress={handleCameraSwitch}>
-                  <Text style={{ color: 'white' }}>Switch Camera</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {imageUri && (
-              <View style={{ width: '80%' }}>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.labels}>NAME</Text>
-                  <TextInput
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={name}
-                    onChangeText={setName}
-                  />
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.labels}>SURNAME</Text>
-                  <TextInput
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={surname}
-                    onChangeText={setSurname}
-                  />
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.labels}>ENTER YOUR EMAIL</Text>
-                  <TextInput
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={email}
-                    onChangeText={setEmail}
-                  />
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.labels}>ENTER YOUR PASSWORD</Text>
-                  <TextInput
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry={true}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.labels}>CONFIRM PASSWORD</Text>
-                  <TextInput
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry={true}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                  />
-                </View>
-                <TouchableOpacity style={styles.buttonStyle} onPress={handleSubmit}>
-                  <Text style={{ color: 'white' }}>REGISTER</Text>
-                </TouchableOpacity>
               </View>
-            )}
+              <View style={styles.inputContainer}>
+                <Text style={styles.labels}>SURNAME</Text>
+                <TextInput
+                  style={styles.inputStyle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={surname}
+                  onChangeText={setSurname}
+                />
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.labels}>ENTER YOUR EMAIL</Text>
+                <TextInput
+                  style={styles.inputStyle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                />
+                {emailErrorMessage ? (
+                  <Text style={styles.errorText}>{emailErrorMessage}</Text>
+                ) : null}
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.labels}>ENTER YOUR PASSWORD</Text>
+                <TextInput
+                  style={styles.inputStyle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                {passwordErrorMessage ? (
+                  <Text style={styles.errorText}>{passwordErrorMessage}</Text>
+                ) : null}
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.labels}>CONFIRM PASSWORD</Text>
+                <TextInput
+                  style={styles.inputStyle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              </View>
+              <TouchableOpacity style={styles.buttonStyle} onPress={handleSubmit}>
+                <Text style={{ color: 'white' }}>REGISTER</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ScrollView>
+    
+    </ImageBackground>
   );
 }
 
@@ -194,6 +162,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     marginBottom: 20,
+    fontWeight:'bold'
   },
   inputContainer: {
     marginBottom: 20,
@@ -207,6 +176,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderWidth: 1,
     padding: 10,
+    backgroundColor:'white'
   },
   buttonStyle: {
     backgroundColor: 'blue',
@@ -215,14 +185,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  cameraButton: {
-    backgroundColor: 'blue',
-    padding: 15,
-    borderRadius: 50,
-    marginBottom: 20,
+  errorText: {
+    color: 'red',
+    marginTop: 5,
   },
-  camera: {
-    width: '100%',
-    height: 400,
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -1,9 +1,8 @@
 {
   "expo": {
-    "name": "Tour360",
+    "name": "VirtualTour",
     "slug": "Tour360",
     "version": "1.0.0",
-    "expo.optimizeJs": false,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -17,13 +16,21 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
+      },
+      "bundleIdentifier": "com.shashikant03.Tour360"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "com.shashikant03.Tour360"
     },
     "web": {
       "bundler": "metro",
@@ -32,10 +39,19 @@
     },
     "plugins": [
       "expo-router",
-      "react-native-vision-camera"
+      "expo-asset",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f5b0260e-e471-489e-b3ec-bfd41c3d9acb"
+      }
     }
   }
 }

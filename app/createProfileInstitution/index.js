@@ -1,59 +1,70 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet ,ImageBackground} from 'react-native';
 import { useRouter } from 'expo-router'; // Import useRouter hook from expo-router
+import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Initialize Supabase client
+const supabase = createClient('https://yinihqkmqtemokvacipf.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpbmlocWttcXRlbW9rdmFjaXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgwNjM4NTEsImV4cCI6MjAyMzYzOTg1MX0.SPb-xP8uhX94OTaAepQEX6o0c3gj-okkbEIdXT9Xxpw');
 
 const ProfilePage = () => {
   const router = useRouter(); // Initialize router object
-  const [instituteName, setInstituteName] = useState('');
   const [numberOfFloors, setNumberOfFloors] = useState('');
-  const [floorNames, setFloorNames] = useState(Array.from({ length: parseInt(numberOfFloors) }, () => ""));
+  const [floorNames, setFloorNames] = useState(Array.from({ length: parseInt(numberOfFloors) }, (_, index) => `Floor ${index + 1}`));
+
+  useEffect(() => {
+    // Check if campusId is stored in AsyncStorage
+    AsyncStorage.getItem('campusId').then(campusId => {
+      console.log('Campus ID from AsyncStorage:', campusId);
+    }).catch(error => {
+      console.error('Error retrieving campus ID from AsyncStorage:', error);
+    });
+  }, []); // Run only once when the component mounts
 
   const handleSubmit = async () => {
-    console.log("Institute Name:", instituteName);
     console.log("Number of Floors:", numberOfFloors);
     console.log("Floor Names:", floorNames);
 
-    // Send data to backend API to save
     try {
-      // Assuming you have an API endpoint to save building and floor data
-      const response = await fetch('YOUR_BACKEND_API_URL', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          instituteName: instituteName,
-          numberOfFloors: parseInt(numberOfFloors),
-          floorNames: floorNames,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save data');
+      const idObject = await AsyncStorage.getItem('campusId');
+    
+      // Parse the ID value from the object
+      const campusid = JSON.parse(idObject)[0].id;
+      console.log(campusid)
+      // Insert floor data into the "floor" table in Supabase
+      for (let i = 1; i <= parseInt(numberOfFloors); i++) {
+        const { data, error } = await supabase.from('Floor').insert([
+          {
+            Floorname: floorNames[i - 1], // Adjust index to start from 0
+            No: i - 1,
+            Campusid: campusid
+          },
+        ]);
+
+        if (error) {
+          throw new Error('Failed to save floor data');
+        }
+
+        console.log(`Data for floor ${i} saved successfully.`);
       }
 
-      console.log('Data saved successfully.');
+      console.log('All floor data saved successfully.');
 
       // After saving, navigate to the grid page for each floor
-      for (let i = 1; i <= parseInt(numberOfFloors); i++) {
-        router.navigate('/Grid', { currentFloor: i, totalFloors: parseInt(numberOfFloors) });
-      }
+      router.navigate('/Grid');
+
     } catch (error) {
       console.error('Error saving data:', error);
     }
   };
 
   return (
+    <ImageBackground
+    source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSp1R_3LRWcgJVv_zo-z-NJdXq7XXsqZdz28Q&usqp=CAU' }}
+    style={styles.backgroundImage}
+    // Adding blur effect
+  >
     <View style={styles.container}>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Building Name:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Building name"
-          value={instituteName}
-          onChangeText={text => setInstituteName(text)}
-        />
-      </View>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Number of Floors:</Text>
         <TextInput
@@ -62,7 +73,7 @@ const ProfilePage = () => {
           value={numberOfFloors}
           onChangeText={text => {
             setNumberOfFloors(text);
-            setFloorNames(Array.from({ length: parseInt(text) }, () => ""));
+            setFloorNames(Array.from({ length: parseInt(text) }, (_, index) => `Floor ${index + 1}`));
           }}
           keyboardType="numeric"
         />
@@ -84,6 +95,7 @@ const ProfilePage = () => {
       ))}
       <Button title="Submit" onPress={handleSubmit} />
     </View>
+    </ImageBackground>
   );
 };
 
@@ -96,7 +108,14 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 20,
+
+  },  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+
   label: {
     fontSize: 18,
     marginBottom: 10,
@@ -108,6 +127,7 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 16,
     width: '100%',
+    backgroundColor:'white'
   },
 });
 

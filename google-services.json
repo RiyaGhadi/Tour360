@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "601121939816",
+    "project_id": "tour360-14246",
+    "storage_bucket": "tour360-14246.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601121939816:android:7014b16c8580677b5df6dd",
+        "android_client_info": {
+          "package_name": "com.Rit.Tour360"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-chLKqHEnGFMP1ZTZaauJ5IQdyc4rZhk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
